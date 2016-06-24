@@ -28,14 +28,13 @@ public final class Part2Activity extends Activity {
   private static final String TAG = Part2Activity.class.getSimpleName();
   private static final String KEY_BUTTON_ENABLED = "key_button_enabled";
 
+  /** A subscription which should be unsubscribed in onStop(). */
+  private final CompositeSubscription compositeSubscription = new CompositeSubscription();
   private final Random random = new Random();
 
   private EditText username;
   private EditText password;
   private Button button;
-
-  /** A subscription which should be unsubscribed in onStop(). */
-  private CompositeSubscription compositeSubscription = new CompositeSubscription();
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -58,14 +57,14 @@ public final class Part2Activity extends Activity {
         .subscribeOn(Schedulers.computation())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(new Observer<Boolean>() {
+          //@formatter:off
           @Override public void onCompleted() {
             Log.d(TAG, "onCompleted()");
           }
-
           @Override public void onError(Throwable e) {
             Log.d(TAG, "onError()", e);
           }
-
+          //@formatter:on
           @Override public void onNext(Boolean enabled) {
             Log.d(TAG, String.format("onNext(enabled) -> %1$s", enabled));
             button.setEnabled(enabled);
