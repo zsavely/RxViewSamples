@@ -67,4 +67,12 @@ public final class Part1Activity extends Activity {
       subscription.unsubscribe();
     }
   }
+
+  @Override protected void onDestroy() {
+    super.onDestroy();
+
+    editText = null;
+    content = null;
+    count = null;
+  }
 }
