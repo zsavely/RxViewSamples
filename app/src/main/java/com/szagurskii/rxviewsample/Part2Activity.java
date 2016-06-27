@@ -3,25 +3,25 @@ package com.szagurskii.rxviewsample;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 
 import com.jakewharton.rxbinding.view.RxView;
-import com.jakewharton.rxbinding.widget.RxTextView;
-
-import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
+
+import static com.szagurskii.rxviewsample.RxUtils.rxTextView;
+import static com.szagurskii.rxviewsample.Utils.isEmailValid;
+import static com.szagurskii.rxviewsample.Utils.isPasswordValid;
+import static com.szagurskii.rxviewsample.Utils.isUsernameValid;
 
 public final class Part2Activity extends Activity {
   private static final String TAG = Part2Activity.class.getSimpleName();
@@ -113,58 +113,5 @@ public final class Part2Activity extends Activity {
     username = null;
     password = null;
     button = null;
-  }
-
-  /** Returns an Observable that subscribes to TextView but observes the result on the computation thread. */
-  private static Observable<CharSequence> rxTextView(EditText editText) {
-    return RxTextView.textChanges(editText)
-        .observeOn(Schedulers.computation())
-        .debounce(new Func1<CharSequence, Observable<Long>>() {
-          @Override public Observable<Long> call(CharSequence charSequence) {
-            // Do not debounce if the CharSequence is empty
-            // because in this way we can disable the button simultaneously.
-            if (charSequence.length() == 0) return Observable.just(0L);
-
-            // Otherwise, wait for 500 millis.
-            return Observable.timer(500, TimeUnit.MILLISECONDS);
-          }
-        })
-        .subscribeOn(AndroidSchedulers.mainThread());
-  }
-
-  /** A simple function to validate e-mail address. */
-  private static boolean isEmailValid(@NonNull String email) {
-    return !email.isEmpty() && email.contains("@") && email.contains(".");
-  }
-
-  /** A simple function to validate username. */
-  private static boolean isUsernameValid(@NonNull String username) {
-    return username.length() > 5;
-  }
-
-  /**
-   * {@code (?=.*\d)} is for one digit from 0-9.
-   * <br>
-   * {@code (?=.*[a-z])} is for one lowercase character.
-   * <br>
-   * {@code (?=.*[A-Z])} is for one uppercase character.
-   * <br>
-   * {@code .} match anything with previous condition checking.
-   * <br>
-   * {@code {6,20}} length is more than 6 characters and less or equal to 20.
-   *
-   * @see <a href="http://goo.gl/OGKn03">Information about regular expressions.</a>
-   */
-  private static final String PASSWORD_PATTERN = "((?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,20})";
-
-  /**
-   * <p>
-   * This method is used for validating the password complexity.
-   * </p>
-   *
-   * @return {@code true} if the password is complex enough.
-   */
-  private static boolean isPasswordValid(@NonNull String password) {
-    return password.matches(PASSWORD_PATTERN);
   }
 }
