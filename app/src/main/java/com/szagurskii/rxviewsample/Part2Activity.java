@@ -3,7 +3,7 @@ package com.szagurskii.rxviewsample;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,7 +11,6 @@ import android.widget.EditText;
 import com.jakewharton.rxbinding.view.RxView;
 import com.jakewharton.rxbinding.widget.RxTextView;
 
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
@@ -20,7 +19,7 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func2;
+import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
@@ -28,10 +27,10 @@ public final class Part2Activity extends Activity {
   private static final String TAG = Part2Activity.class.getSimpleName();
   private static final String KEY_BUTTON_ENABLED = "key_button_enabled";
 
-  /** A subscription which should be unsubscribed in onStop(). */
+  /** A CompositeSubscription which holds all created subscriptions and should be unsubscribed in onStop(). */
   private final CompositeSubscription compositeSubscription = new CompositeSubscription();
-  private final Random random = new Random();
 
+  private EditText email;
   private EditText username;
   private EditText password;
   private Button button;
@@ -40,18 +39,19 @@ public final class Part2Activity extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_part2);
 
+    email = (EditText) findViewById(R.id.email);
     username = (EditText) findViewById(R.id.username);
     password = (EditText) findViewById(R.id.password);
-    button = (Button) findViewById(R.id.login);
+    button = (Button) findViewById(R.id.proceed);
 
-    Subscription subscriptionEditTexts = Observable.combineLatest(rxTextView(username), rxTextView(password),
-        new Func2<CharSequence, CharSequence, Boolean>() {
-          @Override public Boolean call(CharSequence login, CharSequence password) {
-            if (login.length() != 0 && password.length() != 0) {
-              // Suppose you do some hard work with CharSequence.
-              SystemClock.sleep(random.nextInt(1000));
-            }
-            return login.toString().trim().length() > 0 && password.length() > 0;
+    Subscription subscriptionEditTexts = Observable.combineLatest(rxTextView(email), rxTextView(username), rxTextView(password),
+        new Func3<CharSequence, CharSequence, CharSequence, Boolean>() {
+          @Override public Boolean call(CharSequence email, CharSequence username, CharSequence password) {
+            boolean emailValid = isEmailValid(email.toString());
+            boolean usernameValid = isUsernameValid(username.toString());
+            boolean passwordValid = isPasswordValid(password.toString());
+
+            return emailValid && usernameValid && passwordValid;
           }
         })
         .subscribeOn(Schedulers.computation())
@@ -109,18 +109,20 @@ public final class Part2Activity extends Activity {
   @Override protected void onDestroy() {
     super.onDestroy();
 
+    email = null;
     username = null;
     password = null;
     button = null;
   }
 
-  /** Returns an Observable that subscribes to TextView but observes the result on computation thread. */
+  /** Returns an Observable that subscribes to TextView but observes the result on the computation thread. */
   private static Observable<CharSequence> rxTextView(EditText editText) {
     return RxTextView.textChanges(editText)
         .observeOn(Schedulers.computation())
         .debounce(new Func1<CharSequence, Observable<Long>>() {
           @Override public Observable<Long> call(CharSequence charSequence) {
-            // Do not debounce if the CharSequence is empty.
+            // Do not debounce if the CharSequence is empty
+            // because in this way we can disable the button simultaneously.
             if (charSequence.length() == 0) return Observable.just(0L);
 
             // Otherwise, wait for 500 millis.
@@ -128,5 +130,41 @@ public final class Part2Activity extends Activity {
           }
         })
         .subscribeOn(AndroidSchedulers.mainThread());
+  }
+
+  /** A simple function to validate e-mail address. */
+  private static boolean isEmailValid(@NonNull String email) {
+    return !email.isEmpty() && email.contains("@") && email.contains(".");
+  }
+
+  /** A simple function to validate username. */
+  private static boolean isUsernameValid(@NonNull String username) {
+    return username.length() > 5;
+  }
+
+  /**
+   * {@code (?=.*\d)} is for one digit from 0-9.
+   * <br>
+   * {@code (?=.*[a-z])} is for one lowercase character.
+   * <br>
+   * {@code (?=.*[A-Z])} is for one uppercase character.
+   * <br>
+   * {@code .} match anything with previous condition checking.
+   * <br>
+   * {@code {6,20}} length is more than 6 characters and less or equal to 20.
+   *
+   * @see <a href="http://goo.gl/OGKn03">Information about regular expressions.</a>
+   */
+  private static final String PASSWORD_PATTERN = "((?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,20})";
+
+  /**
+   * <p>
+   * This method is used for validating the password complexity.
+   * </p>
+   *
+   * @return {@code true} if the password is complex enough.
+   */
+  private static boolean isPasswordValid(@NonNull String password) {
+    return password.matches(PASSWORD_PATTERN);
   }
 }
