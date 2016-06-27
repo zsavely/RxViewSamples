@@ -1,6 +1,7 @@
 <resources>
   <string name="app_name">RxViewSample</string>
-  <string name="login">Login</string>
+  <string name="proceed">Proceed</string>
   <string name="password">Password</string>
   <string name="username">Username</string>
+  <string name="email">E-mail</string>
 </resources>
