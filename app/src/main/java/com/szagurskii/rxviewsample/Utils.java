@@ -1,5 +1,6 @@
 package com.szagurskii.rxviewsample;
 
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 
 /**
@@ -29,6 +30,8 @@ public class Utils {
    * @return {@code true} if the password is complex enough.
    */
   static boolean isPasswordValid(@NonNull String password) {
+    if (password.length() == 0) return false;
+    SystemClock.sleep(500); // Simulate the heavy process.
     return password.matches(PASSWORD_PATTERN);
   }
 
