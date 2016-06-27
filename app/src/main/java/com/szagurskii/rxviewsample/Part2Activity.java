@@ -44,8 +44,11 @@ public final class Part2Activity extends Activity {
     password = (EditText) findViewById(R.id.password);
     button = (Button) findViewById(R.id.proceed);
 
+    // Create a Subscription for EditTexts.
     Subscription subscriptionEditTexts = Observable.combineLatest(rxTextView(email), rxTextView(username), rxTextView(password),
         new Func3<CharSequence, CharSequence, CharSequence, Boolean>() {
+          // This will happen in the background because
+          // all Observables here are already observing on Schedulers.computation().
           @Override public Boolean call(CharSequence email, CharSequence username, CharSequence password) {
             boolean emailValid = isEmailValid(email.toString());
             boolean usernameValid = isUsernameValid(username.toString());
@@ -54,7 +57,11 @@ public final class Part2Activity extends Activity {
             return emailValid && usernameValid && passwordValid;
           }
         })
+        // This doesn't affect much but
+        // we can subscribe in the background, so why not?
         .subscribeOn(Schedulers.computation())
+        // Change the observation thread to the main thread
+        // in order to change the button state.
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(new Observer<Boolean>() {
           //@formatter:off
@@ -71,6 +78,7 @@ public final class Part2Activity extends Activity {
           }
         });
 
+    // Create a Subscription for button clicks.
     Subscription subscriptionButton = RxView.clicks(button)
         .subscribeOn(AndroidSchedulers.mainThread())
         .subscribe(new Action1<Void>() {
@@ -80,6 +88,7 @@ public final class Part2Activity extends Activity {
           }
         });
 
+    // Add all created subscriptions to the CompositeSubscription.
     compositeSubscription.add(subscriptionEditTexts);
     compositeSubscription.add(subscriptionButton);
   }
@@ -87,6 +96,7 @@ public final class Part2Activity extends Activity {
   @Override protected void onStop() {
     super.onStop();
 
+    // Unsubscribe from all added subscriptions.
     if (!compositeSubscription.isUnsubscribed()) {
       compositeSubscription.unsubscribe();
     }
@@ -109,6 +119,7 @@ public final class Part2Activity extends Activity {
   @Override protected void onDestroy() {
     super.onDestroy();
 
+    // Release view references.
     email = null;
     username = null;
     password = null;

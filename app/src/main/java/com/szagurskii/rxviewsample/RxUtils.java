@@ -18,7 +18,9 @@ public class RxUtils {
   /** Returns an Observable that subscribes to TextView but observes the result on the computation thread. */
   static Observable<CharSequence> rxTextView(EditText editText) {
     return RxTextView.textChanges(editText)
+        // Observe and process in the background.
         .observeOn(Schedulers.computation())
+        // Avoid rx.exceptions.MissingBackpressureException.
         .debounce(new Func1<CharSequence, Observable<Long>>() {
           @Override public Observable<Long> call(CharSequence charSequence) {
             // Do not debounce if the CharSequence is empty
@@ -29,6 +31,7 @@ public class RxUtils {
             return Observable.timer(500, TimeUnit.MILLISECONDS);
           }
         })
+        // We need to create the Observable on the main thread.
         .subscribeOn(AndroidSchedulers.mainThread());
   }
 }
