@@ -1,8 +1,9 @@
 RxViewSample
 ========
    
-[Blog post "How to Observe EditText Changes in Background" (Part 1)](http://szagurskii.com/blog/how-to-observe-edittext-changes-in-background/) explaining the issue.
-[Blog post "Processing Multiple EditText Changes in Background" (Part 2)](http://szagurskii.com/blog/processing-multiple-edittext-changes-in-background/) explaining the issue.
+[Blog post "How to Observe EditText Changes in Background" (Part 1)](http://szagurskii.com/blog/how-to-observe-edittext-changes-in-background/).
+
+[Blog post "Processing Multiple EditText Changes in Background" (Part 2)](http://szagurskii.com/blog/processing-multiple-edittext-changes-in-background/).
 
 ### License
 
